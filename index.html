@@ -243,6 +243,10 @@
     .add-txn-form .full{grid-column:1;}
     .page-title{font-size:1.55rem;}
     #back-top{bottom:16px;right:16px;}
+    /* Prevent layout jump when keyboard appears */
+    body{min-height:100vh;min-height:-webkit-fill-available;}
+    html{height:-webkit-fill-available;}
+    textarea,.fi{font-size:16px;} /* Prevents iOS zoom on focus */
   }
 </style>
 </head>
@@ -268,6 +272,8 @@
     <input type="password" id="api-key-input" placeholder="gsk_..." autocomplete="off">
     <p class="hint">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys → Create API Key</p>
     <button class="btn-primary" id="save-key-btn">Let's Go →</button>
+    <button id="clear-key-btn" style="margin-top:10px;background:none;border:1px solid var(--border);border-radius:12px;padding:10px;width:100%;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:.85rem;cursor:pointer;display:none;">🗑 Clear saved key</button>
+    <button id="close-settings-btn" style="margin-top:8px;background:none;border:none;color:var(--text-muted);font-size:.82rem;cursor:pointer;width:100%;padding:6px;">✕ Close</button>
   </div>
 </div>
 
@@ -569,7 +575,7 @@ function loadApiKey() {
   } catch(e){}
   return '';
 }
-let apiKey = 'PASTE_YOUR_GROQ_KEY_HERE'; // Replace PASTE_YOUR_GROQ_KEY_HERE with your gsk_... key
+let apiKey = loadApiKey();
 let transactions = safeGet('tk_transactions', []);
 let goalData = safeGet('tk_goal', null);
 let favourites = safeGet('tk_favourites', {});
@@ -690,7 +696,23 @@ document.getElementById('save-key-btn').addEventListener('click', function() {
 });
 document.getElementById('open-settings-btn').addEventListener('click', function() {
   document.getElementById('api-key-input').value = apiKey;
+  const clearBtn = document.getElementById('clear-key-btn');
+  clearBtn.style.display = apiKey ? 'block' : 'none';
   document.getElementById('settings-overlay').classList.remove('hidden');
+});
+document.getElementById('clear-key-btn').addEventListener('click', function() {
+  if (!confirm('Clear your saved API key? You will need to re-enter it to use AI features.')) return;
+  apiKey = '';
+  try { localStorage.removeItem('tk_groq_key'); } catch(e){}
+  try { sessionStorage.removeItem('tk_groq_key'); } catch(e){}
+  try { document.cookie = 'tk_groq_key=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;'; } catch(e){}
+  document.getElementById('api-key-input').value = '';
+  this.style.display = 'none';
+  alert('API key cleared.');
+});
+document.getElementById('close-settings-btn').addEventListener('click', function() {
+  if (!apiKey) { alert('You need a Groq API key to use AI features. Enter one above or get a free one at console.groq.com'); return; }
+  document.getElementById('settings-overlay').classList.add('hidden');
 });
 
 // ═══ BACK TO TOP ═══
@@ -844,7 +866,29 @@ function loadingHTML(msg) {
 }
 
 function errorHTML(msg, retryFn) {
-  return '<div class="error-msg">⚠️ '+msg+'<br><button class="retry-btn" onclick="('+retryFn+')()">↻ Try again</button></div>';
+  const fnMap = {generateMeals,generateSnacks,generateCollege,generateProjects};
+  const btn = document.createElement('button');
+  btn.className = 'retry-btn';
+  btn.textContent = '↻ Try again';
+  btn.addEventListener('click', function(){ if(fnMap[retryFn]) fnMap[retryFn](); });
+  const wrap = document.createElement('div');
+  wrap.className = 'error-msg';
+  wrap.innerHTML = '⚠️ '+msg+'<br>';
+  wrap.appendChild(btn);
+  return wrap.outerHTML.replace('↻ Try again</button>','↻ Try again<span data-retryfn="'+retryFn+'"></span></button>');
+}
+// Robust retry: re-attach after DOM insert
+function errorEl(msg, retryFn) {
+  const fnMap = {generateMeals,generateSnacks,generateCollege,generateProjects};
+  const wrap = document.createElement('div');
+  wrap.className = 'error-msg';
+  wrap.innerHTML = '⚠️ '+msg+'<br>';
+  const btn = document.createElement('button');
+  btn.className = 'retry-btn';
+  btn.textContent = '↻ Try again';
+  btn.addEventListener('click', function(){ if(fnMap[retryFn]) fnMap[retryFn](); });
+  wrap.appendChild(btn);
+  return wrap;
 }
 
 // ═══ FAVOURITES ═══
@@ -919,7 +963,7 @@ function generateMeals() {
   results.innerHTML=loadingHTML('Finding the best recipes for you...');
   callGroq('You are a professional recipe writer. Generate exactly 6 meal recipes for: "'+query+'". Servings: '+mealServings+'. Time: '+(t==='any'?'any':t)+', Difficulty: '+(d==='any'?'any':d)+', Diet: '+diet+'. Scale ALL ingredient amounts for '+mealServings+' serving'+(mealServings!==1?'s':'')+'. Return ONLY a valid JSON array, no other text:\n[{"name":"","time":"15 minutes","difficulty":"Easy","ingredients":["amount ingredient"],"steps":["Step one"]}]\nRules: 6-10 ingredients with exact scaled amounts. 4-7 steps each. Each step must be 1-2 full sentences explaining precisely what to do and how to do it. Write like a professional recipe book — purely instructional, no encouragement, no filler phrases, no commentary. Do NOT say things like "enjoy", "be careful", "delicious", "breathe in the aroma" or any motivational phrases.')
   .then(function(text) { renderRecipes(parseJSON(text), results, 'meals'); })
-  .catch(function(e) { results.innerHTML=errorHTML(e.message||'Something went wrong.','generateMeals'); })
+  .catch(function(e) { results.innerHTML=''; results.appendChild(errorEl(e.message||'Something went wrong.','generateMeals')); })
   .finally(function() { btn.disabled=false; btn.innerHTML='✨ Generate Meals'; });
 }
 document.getElementById('meal-btn').addEventListener('click', generateMeals);
@@ -934,7 +978,7 @@ function generateSnacks() {
   results.innerHTML=loadingHTML('Finding snacks with what you have...');
   callGroq('You are a professional recipe writer. The user has: "'+ingredients+'". Servings: '+snackServings+'. Time: '+(t==='any'?'any':t)+', Difficulty: '+(d==='any'?'any':d)+', Diet: '+diet+'. Generate exactly 6 snack ideas using mostly these ingredients. Scale ALL amounts for '+snackServings+' serving'+(snackServings!==1?'s':'')+'. Return ONLY a valid JSON array:\n[{"name":"","time":"5 minutes","difficulty":"Easy","ingredients":["amount ingredient"],"steps":["Step one"]}]\nRules: 3-6 ingredients with exact scaled amounts. 2-5 steps each. Each step must be a full precise sentence. Write like a professional recipe book — purely instructional, no encouragement, no filler, no commentary. Do NOT use words like "enjoy", "delicious", "be careful" or any motivational language.')
   .then(function(text) { renderRecipes(parseJSON(text), results, 'snacks'); })
-  .catch(function(e) { results.innerHTML=errorHTML(e.message||'Something went wrong.','generateSnacks'); })
+  .catch(function(e) { results.innerHTML=''; results.appendChild(errorEl(e.message||'Something went wrong.','generateSnacks')); })
   .finally(function() { btn.disabled=false; btn.innerHTML='✨ Generate Snacks'; });
 }
 document.getElementById('snack-btn').addEventListener('click', generateSnacks);
@@ -974,6 +1018,7 @@ document.getElementById('add-txn-btn').addEventListener('click', function() {
 });
 
 function deleteTransaction(id) {
+  if (!confirm('Delete this transaction?')) return;
   transactions=transactions.filter(function(t){ return t.id!==id; });
   safeSet('tk_transactions',transactions);
   renderTransactions(); updateMoneyStats();
@@ -1023,7 +1068,8 @@ function drawPieChart() {
     const legend=document.getElementById('chart-legend');
     if (!expenses.length) {
       ctx.clearRect(0,0,130,130);
-      legend.innerHTML='<span style="color:var(--text-muted);font-size:.8rem;">Add expenses to see chart</span>';
+      const hasIncome = transactions.some(function(t){ return t.type==='income'; });
+      legend.innerHTML='<span style="color:var(--text-muted);font-size:.8rem;">'+(hasIncome ? '✅ Income logged! Add an expense to see your spending breakdown.' : 'Add expenses to see chart')+'</span>';
       return;
     }
     const cats={};
@@ -1091,7 +1137,7 @@ function generateCollege() {
       results.appendChild(el);
     });
   })
-  .catch(function(e){ results.innerHTML=errorHTML(e.message||'Something went wrong.','generateCollege'); })
+  .catch(function(e){ results.innerHTML=''; results.appendChild(errorEl(e.message||'Something went wrong.','generateCollege')); })
   .finally(function(){ btn.disabled=false; btn.innerHTML='✨ Find Colleges'; });
 }
 document.getElementById('college-btn').addEventListener('click', generateCollege);
@@ -1123,7 +1169,7 @@ function generateProjects() {
       results.appendChild(el);
     });
   })
-  .catch(function(e){ results.innerHTML=errorHTML(e.message||'Something went wrong.','generateProjects'); })
+  .catch(function(e){ results.innerHTML=''; results.appendChild(errorEl(e.message||'Something went wrong.','generateProjects')); })
   .finally(function(){ btn.disabled=false; btn.innerHTML='✨ Generate Projects'; });
 }
 document.getElementById('project-btn').addEventListener('click', generateProjects);

@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teen Kit</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Teen Kit">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230e0e12'/><text y='.9em' font-size='80' x='10'>🎒</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0e0e12;--surface:#16161d;--surface2:#1e1e28;--border:#2a2a38;
+    --accent:#c8f135;--accent2:#7c6af7;--accent3:#f76a8a;--accent4:#38bdf8;
+    --text:#f0f0f5;--text-muted:#7a7a95;--radius:16px;
+  }
+  body.light{--bg:#f4f4f8;--surface:#ffffff;--surface2:#ebebf2;--border:#dcdce8;--text:#0e0e12;--text-muted:#6b6b85;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s;}
+
+  /* ONBOARDING */
+  #onboarding{position:fixed;inset:0;background:var(--bg);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;}
+  #onboarding.hidden{display:none;}
+  .ob-steps{display:flex;gap:8px;margin-bottom:32px;}
+  .ob-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s;}
+  .ob-dot.active{background:var(--accent);width:24px;border-radius:4px;}
+  .ob-icon{font-size:4rem;margin-bottom:20px;}
+  .ob-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:12px;}
+  .ob-desc{color:var(--text-muted);font-size:.95rem;line-height:1.7;max-width:320px;margin-bottom:36px;}
+  .ob-btns{display:flex;gap:12px;width:100%;max-width:320px;}
+  .ob-skip{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--text-muted);cursor:pointer;}
+  .ob-next{flex:2;background:var(--accent);color:#0e0e12;border:none;border-radius:12px;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;}
+
+  /* SETTINGS */
+  #settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:1000;}
+  #settings-overlay.hidden{display:none;}
+  .settings-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:36px;width:90%;max-width:460px;text-align:center;}
+  .settings-box h2{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:8px;}
+  .settings-box p{color:var(--text-muted);font-size:.9rem;margin-bottom:16px;line-height:1.7;}
+  .settings-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:.95rem;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;transition:border-color .2s;}
+  .settings-box input:focus{border-color:var(--accent);}
+  .hint{font-size:.8rem;color:var(--text-muted);margin-bottom:20px;line-height:1.6;}
+  .hint a{color:var(--accent);text-decoration:none;}
+  .btn-primary{background:var(--accent);color:#0e0e12;border:none;border-radius:12px;padding:14px 32px;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;width:100%;transition:opacity .2s;}
+  .btn-primary:hover{opacity:.9;}
+
+  /* LAYOUT */
+  header{padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;gap:10px;}
+  .logo{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;}
+  .logo span{color:var(--accent);}
+  .header-btns{display:flex;gap:7px;}
+  .icon-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 13px;color:var(--text-muted);font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color .2s,color .2s;white-space:nowrap;}
+  .icon-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .nav-tabs{display:flex;gap:3px;padding:16px 24px 0;border-bottom:1px solid var(--border);overflow-x:auto;}
+  .nav-tabs::-webkit-scrollbar{display:none;}
+  .nav-tab{background:none;border:none;border-bottom:3px solid transparent;padding:9px 16px 12px;color:var(--text-muted);font-family:'Syne',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:color .2s,border-color .2s;}
+  .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .page{display:none;padding:24px;max-width:860px;margin:0 auto;}
+  .page.active{display:block;}
+  .page-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:4px;}
+  .page-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:22px;}
+
+  /* PULL TO REFRESH */
+  #ptr{display:flex;align-items:center;justify-content:center;height:0;overflow:hidden;transition:height .3s;color:var(--text-muted);font-size:.85rem;gap:8px;}
+  #ptr.visible{height:48px;}
+  #ptr-icon{display:inline-block;transition:transform .3s;}
+
+  /* BACK TO TOP */
+  #back-top{position:fixed;bottom:24px;right:24px;background:var(--accent2);color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:1.1rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s,transform .2s;z-index:200;pointer-events:none;}
+  #back-top.visible{opacity:1;pointer-events:all;}
+  #back-top:hover{transform:translateY(-2px);}
+
+  /* CARDS */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+  .card-label{display:block;font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px;}
+  textarea,.fi{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:11px 13px;color:var(--text);font-size:.9rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;resize:none;}
+  textarea{min-height:70px;margin-bottom:10px;}
+  textarea:focus,.fi:focus{border-color:var(--accent2);}
+  select.fi{cursor:pointer;}
+
+  /* SERVING SIZE */
+  .serving-row{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;}
+  .serving-label{font-size:.82rem;color:var(--text-muted);}
+  .serving-btns{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;}
+  .serv-btn{background:none;border:none;color:var(--text-muted);font-size:1rem;cursor:pointer;padding:0 4px;line-height:1;transition:color .15s;}
+  .serv-btn:hover{color:var(--accent);}
+  .serv-count{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;min-width:14px;text-align:center;color:var(--text);}
+
+  /* CHIPS */
+  .filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;}
+  .filter-group{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
+  .filter-label{font-size:.76rem;color:var(--text-muted);font-weight:500;}
+  .filter-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 11px;font-size:.77rem;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;user-select:none;display:inline-block;}
+  .filter-chip.active{background:var(--accent);border-color:var(--accent);color:#0e0e12;font-weight:500;}
+  .chips-grid{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+  .ingredient-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:.78rem;color:var(--text-muted);cursor:pointer;transition:all .15s;user-select:none;display:inline-block;}
+  .ingredient-chip.selected{background:var(--accent3);border-color:var(--accent3);color:#fff;font-weight:500;}
+
+  /* BUTTONS */
+  .btn-search{background:var(--accent2);color:#fff;border:none;border-radius:12px;padding:11px 18px;font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:opacity .2s,transform .1s;display:inline-flex;align-items:center;gap:7px;margin-top:11px;}
+  .btn-search:hover{opacity:.85;transform:translateY(-1px);}
+  .btn-search:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+  .btn-accent{background:var(--accent);color:#0e0e12;border:none;border-radius:12px;padding:9px 16px;font-family:'Syne',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;transition:opacity .2s;white-space:nowrap;}
+  .btn-accent:hover{opacity:.85;}
+
+  /* SECTION TABS */
+  .section-tabs{display:flex;gap:6px;margin-bottom:18px;}
+  .section-tab{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:.8rem;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+  .section-tab.active{background:var(--accent2);border-color:var(--accent2);color:#fff;font-weight:500;}
+  .sub-page{display:none;}.sub-page.active{display:block;}
+  .empty-favs{text-align:center;padding:48px 20px;color:var(--text-muted);}
+  .empty-favs .icon{font-size:2.5rem;margin-bottom:12px;}
+  .empty-favs h3{font-family:'Syne',sans-serif;font-size:1rem;color:var(--text);margin-bottom:6px;}
+
+  /* RECIPE CARDS */
+  .recipe-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:11px;transition:border-color .2s;}
+  .recipe-card:hover{border-color:var(--accent2);}
+  .recipe-card-header{padding:15px 17px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .recipe-card-left{flex:1;}
+  .recipe-name{font-family:'Syne',sans-serif;font-size:.98rem;font-weight:700;margin-bottom:5px;}
+  .recipe-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+  .tag{padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:500;}
+  .tag-time{background:rgba(200,241,53,.12);color:var(--accent);}
+  .tag-easy{background:rgba(56,189,248,.12);color:var(--accent4);}
+  .tag-medium{background:rgba(255,180,50,.12);color:#ffb432;}
+  .tag-hard{background:rgba(247,106,138,.12);color:var(--accent3);}
+  .tag-reach{background:rgba(247,106,138,.12);color:var(--accent3);}
+  .tag-match{background:rgba(200,241,53,.12);color:var(--accent);}
+  .tag-safety{background:rgba(56,189,248,.12);color:var(--accent4);}
+  .recipe-card-right{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+  .fav-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;transition:transform .15s;padding:2px;line-height:1;}
+  .fav-btn:hover{transform:scale(1.2);}
+  .share-btn{background:none;border:none;font-size:.95rem;cursor:pointer;color:var(--text-muted);transition:color .15s;padding:2px;}
+  .share-btn:hover{color:var(--accent2);}
+  .expand-icon{color:var(--text-muted);font-size:.88rem;transition:transform .3s;}
+  .recipe-card.open .expand-icon{transform:rotate(180deg);}
+  .recipe-body{display:none;padding:0 17px 17px;border-top:1px solid var(--border);}
+  .recipe-card.open .recipe-body{display:block;}
+  .section-title{font-family:'Syne',sans-serif;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin:13px 0 6px;}
+  .ingredients-list{display:flex;flex-wrap:wrap;gap:5px;}
+  .ingredient-tag{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px 9px;font-size:.79rem;}
+  .steps-list{list-style:none;counter-reset:steps;}
+  .steps-list li{counter-increment:steps;display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.85rem;line-height:1.65;}
+  .steps-list li:last-child{border-bottom:none;}
+  .steps-list li::before{content:counter(steps);background:var(--accent2);color:#fff;min-width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;margin-top:2px;}
+
+  /* LOADING / ERROR */
+  .loading{text-align:center;padding:40px;color:var(--text-muted);font-size:.88rem;}
+  .spinner{font-size:1.8rem;animation:spin 1s linear infinite;display:block;margin:0 auto 12px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .error-msg{background:rgba(247,106,138,.1);border:1px solid rgba(247,106,138,.3);border-radius:12px;padding:13px;color:var(--accent3);font-size:.85rem;margin-bottom:12px;}
+  .retry-btn{background:var(--accent3);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;margin-top:8px;display:inline-block;}
+  .results-header{font-family:'Syne',sans-serif;font-size:.77rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:11px;}
+
+  /* MONEY */
+  .money-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px;}
+  .stat-label{font-size:.75rem;color:var(--text-muted);font-weight:500;margin-bottom:4px;}
+  .stat-value{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;}
+  .stat-value.pos{color:var(--accent);}.stat-value.neg{color:var(--accent3);}
+  .goal-bar-wrap{background:var(--surface2);border-radius:20px;height:8px;margin-top:9px;overflow:hidden;}
+  .goal-bar{height:100%;background:var(--accent);border-radius:20px;transition:width .5s ease;}
+  .goal-info{display:flex;justify-content:space-between;font-size:.79rem;margin-top:6px;}
+  .add-txn-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px;}
+  .add-txn-form .full{grid-column:1/-1;}
+  .type-toggle{display:flex;gap:7px;}
+  .type-btn{flex:1;padding:9px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--text-muted);font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .15s;}
+  .type-btn.ai{background:rgba(200,241,53,.15);border-color:var(--accent);color:var(--accent);}
+  .type-btn.ae{background:rgba(247,106,138,.15);border-color:var(--accent3);color:var(--accent3);}
+  .txn-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;gap:9px;margin-bottom:6px;}
+  .txn-details{flex:1;min-width:0;}
+  .txn-name{font-size:.87rem;font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .txn-meta{font-size:.73rem;color:var(--text-muted);}
+  .txn-amount{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;flex-shrink:0;}
+  .txn-amount.income{color:var(--accent);}.txn-amount.expense{color:var(--accent3);}
+  .txn-delete{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.92rem;padding:4px 7px;border-radius:8px;transition:color .15s;flex-shrink:0;}
+  .txn-delete:hover{color:var(--accent3);}
+  .no-txns{text-align:center;padding:26px;color:var(--text-muted);font-size:.86rem;}
+  .chart-wrap{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin-top:4px;}
+  .chart-legend{display:flex;flex-direction:column;gap:6px;}
+  .legend-item{display:flex;align-items:center;gap:7px;font-size:.8rem;}
+  .legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+  /* STEM */
+  .stem-subtabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+  .stem-subtab{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:7px 14px;font-family:'Syne',sans-serif;font-weight:700;font-size:.81rem;color:var(--text-muted);cursor:pointer;transition:all .15s;}
+  .stem-subtab.active{background:var(--accent2);border-color:var(--accent2);color:#fff;}
+  .stem-page{display:none;}.stem-page.active{display:block;}
+  .subject-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .subject-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:.78rem;color:var(--text-muted);cursor:pointer;transition:all .15s;user-select:none;display:inline-block;}
+  .subject-chip.active{background:var(--accent4);border-color:var(--accent4);color:#0e0e12;font-weight:500;}
+  .formula-search{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 13px;color:var(--text);font-size:.88rem;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:12px;transition:border-color .2s;}
+  .formula-search:focus{border-color:var(--accent4);}
+  .formula-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px 17px;margin-bottom:9px;cursor:pointer;transition:border-color .2s;}
+  .formula-card:hover{border-color:var(--accent4);}
+  .formula-top{display:flex;align-items:center;justify-content:space-between;gap:11px;}
+  .formula-left{flex:1;}
+  .formula-name{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:4px;}
+  .fsub{font-size:.7rem;font-weight:500;padding:2px 8px;border-radius:20px;}
+  .fsub-math{background:rgba(200,241,53,.1);color:var(--accent);}
+  .fsub-physics{background:rgba(56,189,248,.1);color:var(--accent4);}
+  .fsub-chemistry{background:rgba(124,106,247,.1);color:var(--accent2);}
+  .fsub-biology{background:rgba(247,106,138,.1);color:var(--accent3);}
+  .fsub-geometry{background:rgba(200,241,53,.1);color:var(--accent);}
+  .fsub-trigonometry{background:rgba(56,189,248,.1);color:var(--accent4);}
+  .fsub-earthscience{background:rgba(124,106,247,.1);color:var(--accent2);}
+  .formula-equation{font-family:'Courier New',monospace;font-size:1.02rem;color:var(--accent4);margin:8px 0 3px;font-weight:600;word-break:break-word;}
+  .formula-explanation{font-size:.84rem;color:var(--text-muted);line-height:1.65;display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+  .formula-card.open .formula-explanation{display:block;}
+  .formula-card.open .fchev{transform:rotate(180deg);}
+  .fchev{color:var(--text-muted);font-size:.88rem;transition:transform .3s;flex-shrink:0;}
+  .quiz-toggle{display:flex;align-items:center;gap:9px;margin-bottom:12px;}
+  .quiz-label{font-size:.83rem;color:var(--text-muted);}
+  .toggle-switch{width:40px;height:22px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+  .toggle-switch.on{background:var(--accent2);border-color:var(--accent2);}
+  .toggle-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s;}
+  .toggle-switch.on .toggle-knob{left:20px;}
+  .quiz-eq-hidden{background:var(--surface2);border-radius:8px;padding:5px 11px;font-size:.82rem;color:var(--text-muted);font-style:italic;cursor:pointer;display:inline-block;margin:8px 0 3px;}
+  .quiz-eq-hidden:hover{background:var(--border);}
+  .college-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:17px;margin-bottom:11px;}
+  .college-name{font-family:'Syne',sans-serif;font-size:.98rem;font-weight:800;margin-bottom:3px;}
+  .college-location{font-size:.79rem;color:var(--text-muted);margin-bottom:10px;}
+  .college-why{font-size:.84rem;color:var(--text-muted);line-height:1.6;margin-bottom:10px;}
+  .req-item{font-size:.82rem;display:flex;gap:7px;padding:3px 0;}
+  .req-item::before{content:"✓";color:var(--accent);font-weight:700;flex-shrink:0;}
+  .college-tip{background:var(--surface2);border-left:3px solid var(--accent2);border-radius:0 10px 10px 0;padding:8px 12px;font-size:.81rem;color:var(--text-muted);margin-top:9px;}
+  .college-tip strong{color:var(--accent2);}
+  .project-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:17px;margin-bottom:11px;}
+  .project-name{font-family:'Syne',sans-serif;font-size:.98rem;font-weight:800;margin:7px 0 6px;}
+  .project-desc{font-size:.84rem;color:var(--text-muted);line-height:1.6;margin-bottom:11px;}
+  .materials-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px;}
+  .material-tag{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px 9px;font-size:.77rem;}
+  .save-proj-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 11px;font-size:.76rem;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;margin-top:7px;}
+  .save-proj-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .save-proj-btn.saved{border-color:var(--accent);color:var(--accent);background:rgba(200,241,53,.08);}
+
+  @media(max-width:600px){
+    header,.nav-tabs,.page{padding-left:14px;padding-right:14px;}
+    .money-stats{grid-template-columns:1fr 1fr;}
+    .money-stats .stat-card:last-child{grid-column:1/-1;}
+    .add-txn-form{grid-template-columns:1fr;}
+    .add-txn-form .full{grid-column:1;}
+    .page-title{font-size:1.55rem;}
+    #back-top{bottom:16px;right:16px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="onboarding">
+  <div class="ob-steps">
+    <div class="ob-dot active" id="ob-dot-0"></div>
+    <div class="ob-dot" id="ob-dot-1"></div>
+    <div class="ob-dot" id="ob-dot-2"></div>
+  </div>
+  <div id="ob-content"></div>
+  <div class="ob-btns">
+    <button class="ob-skip" id="ob-skip">Skip</button>
+    <button class="ob-next" id="ob-next">Next →</button>
+  </div>
+</div>
+
+<div id="settings-overlay">
+  <div class="settings-box">
+    <h2>Welcome to <span style="color:var(--accent)">Teen Kit</span> 👋</h2>
+    <p>Enter your free Groq API key to unlock all AI features — no credit card needed!</p>
+    <input type="password" id="api-key-input" placeholder="gsk_..." autocomplete="off">
+    <p class="hint">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys → Create API Key</p>
+    <button class="btn-primary" id="save-key-btn">Let's Go →</button>
+  </div>
+</div>
+
+<div id="ptr"><span id="ptr-icon">↓</span> Pull to refresh</div>
+
+<header>
+  <div class="logo">Teen<span>Kit</span></div>
+  <div class="header-btns">
+    <button class="icon-btn" id="theme-btn">☀️</button>
+    <button class="icon-btn" id="open-settings-btn">⚙ Key</button>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="nav-tab active" data-page="meals">🍽 Meals</button>
+  <button class="nav-tab" data-page="snacks">🍎 Snacks</button>
+  <button class="nav-tab" data-page="money">💰 Money</button>
+  <button class="nav-tab" data-page="stem">🔬 STEM</button>
+</nav>
+
+<!-- MEALS -->
+<div id="page-meals" class="page active">
+  <div class="page-title">🍽 Meals</div>
+  <div class="page-subtitle">Describe what you're craving and get full recipes instantly.</div>
+  <div class="section-tabs">
+    <button class="section-tab active" data-sub="meal-gen" data-parent="meal">Generate</button>
+    <button class="section-tab" data-sub="meal-favs" data-parent="meal">❤️ Favourites</button>
+  </div>
+  <div id="meal-gen" class="sub-page active">
+    <div class="card">
+      <label class="card-label">What do you want to make?</label>
+      <textarea id="meal-prompt" placeholder="e.g. something cheesy and quick, pasta, tacos, healthy breakfast..."></textarea>
+      <div class="serving-row">
+        <span class="serving-label">Servings:</span>
+        <div class="serving-btns">
+          <button class="serv-btn" id="meal-serv-minus">−</button>
+          <span class="serv-count" id="meal-serv-count">2</span>
+          <button class="serv-btn" id="meal-serv-plus">+</button>
+        </div>
+      </div>
+      <div class="filters">
+        <div class="filter-group">
+          <span class="filter-label">Time:</span>
+          <span class="filter-chip active" data-group="mt" data-val="any">Any</span>
+          <span class="filter-chip" data-group="mt" data-val="under 15 minutes">15 min</span>
+          <span class="filter-chip" data-group="mt" data-val="around 30 minutes">30 min</span>
+          <span class="filter-chip" data-group="mt" data-val="around 1 hour">1 hour</span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Difficulty:</span>
+          <span class="filter-chip active" data-group="md" data-val="any">Any</span>
+          <span class="filter-chip" data-group="md" data-val="Easy">Easy</span>
+          <span class="filter-chip" data-group="md" data-val="Medium">Medium</span>
+          <span class="filter-chip" data-group="md" data-val="Hard">Hard</span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Diet:</span>
+          <span class="filter-chip active" data-group="mdiet" data-val="any diet">Any</span>
+          <span class="filter-chip" data-group="mdiet" data-val="vegetarian">Vegetarian</span>
+          <span class="filter-chip" data-group="mdiet" data-val="dairy-free">Dairy-free</span>
+          <span class="filter-chip" data-group="mdiet" data-val="nut-free">Nut-free</span>
+          <span class="filter-chip" data-group="mdiet" data-val="gluten-free">Gluten-free</span>
+        </div>
+      </div>
+      <button class="btn-search" id="meal-btn">✨ Generate Meals</button>
+    </div>
+    <div id="meal-results"></div>
+  </div>
+  <div id="meal-favs" class="sub-page"><div id="meal-favs-list"></div></div>
+</div>
+
+<!-- SNACKS -->
+<div id="page-snacks" class="page">
+  <div class="page-title">🍎 Snacks</div>
+  <div class="page-subtitle">Tell us what's in your fridge and get snack ideas.</div>
+  <div class="section-tabs">
+    <button class="section-tab active" data-sub="snack-gen" data-parent="snack">Generate</button>
+    <button class="section-tab" data-sub="snack-favs" data-parent="snack">❤️ Favourites</button>
+  </div>
+  <div id="snack-gen" class="sub-page active">
+    <div class="card">
+      <label class="card-label">What's in your fridge / pantry?</label>
+      <textarea id="snack-prompt" placeholder="e.g. eggs, cheese, bread, peanut butter..."></textarea>
+      <p style="font-size:.79rem;color:var(--text-muted);margin-bottom:7px;">Or tap to add:</p>
+      <div class="chips-grid" id="ingredient-chips">
+        <span class="ingredient-chip" data-ing="Eggs">🥚 Eggs</span>
+        <span class="ingredient-chip" data-ing="Cheese">🧀 Cheese</span>
+        <span class="ingredient-chip" data-ing="Bread">🍞 Bread</span>
+        <span class="ingredient-chip" data-ing="Peanut Butter">🥜 Peanut Butter</span>
+        <span class="ingredient-chip" data-ing="Banana">🍌 Banana</span>
+        <span class="ingredient-chip" data-ing="Milk">🥛 Milk</span>
+        <span class="ingredient-chip" data-ing="Apple">🍎 Apple</span>
+        <span class="ingredient-chip" data-ing="Butter">🧈 Butter</span>
+        <span class="ingredient-chip" data-ing="Honey">🍯 Honey</span>
+        <span class="ingredient-chip" data-ing="Oats">🥣 Oats</span>
+        <span class="ingredient-chip" data-ing="Chocolate">🍫 Chocolate</span>
+        <span class="ingredient-chip" data-ing="Avocado">🥑 Avocado</span>
+        <span class="ingredient-chip" data-ing="Rice">🍚 Rice</span>
+        <span class="ingredient-chip" data-ing="Bacon">🥓 Bacon</span>
+        <span class="ingredient-chip" data-ing="Lemon">🍋 Lemon</span>
+        <span class="ingredient-chip" data-ing="Tomato">🍅 Tomato</span>
+      </div>
+      <div class="serving-row" style="margin-top:12px;">
+        <span class="serving-label">Servings:</span>
+        <div class="serving-btns">
+          <button class="serv-btn" id="snack-serv-minus">−</button>
+          <span class="serv-count" id="snack-serv-count">1</span>
+          <button class="serv-btn" id="snack-serv-plus">+</button>
+        </div>
+      </div>
+      <div class="filters" style="margin-top:11px;">
+        <div class="filter-group">
+          <span class="filter-label">Time:</span>
+          <span class="filter-chip active" data-group="st" data-val="any">Any</span>
+          <span class="filter-chip" data-group="st" data-val="under 5 minutes">5 min</span>
+          <span class="filter-chip" data-group="st" data-val="under 15 minutes">15 min</span>
+          <span class="filter-chip" data-group="st" data-val="under 30 minutes">30 min</span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Difficulty:</span>
+          <span class="filter-chip active" data-group="sd" data-val="any">Any</span>
+          <span class="filter-chip" data-group="sd" data-val="Easy">Easy</span>
+          <span class="filter-chip" data-group="sd" data-val="Medium">Medium</span>
+          <span class="filter-chip" data-group="sd" data-val="Hard">Hard</span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Diet:</span>
+          <span class="filter-chip active" data-group="sdiet" data-val="any diet">Any</span>
+          <span class="filter-chip" data-group="sdiet" data-val="vegetarian">Vegetarian</span>
+          <span class="filter-chip" data-group="sdiet" data-val="dairy-free">Dairy-free</span>
+          <span class="filter-chip" data-group="sdiet" data-val="nut-free">Nut-free</span>
+        </div>
+      </div>
+      <button class="btn-search" id="snack-btn">✨ Generate Snacks</button>
+    </div>
+    <div id="snack-results"></div>
+  </div>
+  <div id="snack-favs" class="sub-page"><div id="snack-favs-list"></div></div>
+</div>
+
+<!-- MONEY -->
+<div id="page-money" class="page">
+  <div class="page-title">💰 Money Tracker</div>
+  <div class="page-subtitle">Track income, spending, and savings goals.</div>
+  <div class="money-stats">
+    <div class="stat-card"><div class="stat-label">Balance</div><div class="stat-value pos" id="stat-balance">$0.00</div></div>
+    <div class="stat-card"><div class="stat-label">Earned</div><div class="stat-value" id="stat-earned">$0.00</div></div>
+    <div class="stat-card"><div class="stat-label">Spent</div><div class="stat-value neg" id="stat-spent">$0.00</div></div>
+  </div>
+  <div class="card">
+    <label class="card-label">🎯 Savings Goal</label>
+    <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
+      <input type="text" class="fi" id="goal-name" placeholder="e.g. AirPods" style="flex:1;min-width:110px;">
+      <input type="number" class="fi" id="goal-target" placeholder="Target ($)" style="width:100px;" min="0">
+      <button class="btn-accent" id="set-goal-btn">Set</button>
+    </div>
+    <div id="goal-display" style="display:none;margin-top:13px;">
+      <div class="goal-info"><span id="goal-label" style="font-weight:600;"></span><span id="goal-percent" style="color:var(--text-muted);"></span></div>
+      <div class="goal-bar-wrap"><div class="goal-bar" id="goal-bar" style="width:0%"></div></div>
+      <div class="goal-info" style="margin-top:5px;"><span id="goal-progress" style="color:var(--text-muted);font-size:.79rem;"></span><span id="goal-remaining" style="color:var(--text-muted);font-size:.79rem;"></span></div>
+    </div>
+  </div>
+  <div class="card">
+    <label class="card-label">Spending Breakdown</label>
+    <div class="chart-wrap">
+      <canvas id="spend-canvas" width="130" height="130"></canvas>
+      <div class="chart-legend" id="chart-legend"><span style="color:var(--text-muted);font-size:.8rem;">Add expenses to see chart</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <label class="card-label">Add Transaction</label>
+    <div class="type-toggle">
+      <button class="type-btn ai" id="type-income">+ Income</button>
+      <button class="type-btn" id="type-expense">− Expense</button>
+    </div>
+    <div class="add-txn-form">
+      <input type="text" class="fi full" id="txn-desc" placeholder="Description (e.g. Babysitting, Lunch)">
+      <input type="number" class="fi" id="txn-amount" placeholder="Amount ($)" min="0" step="0.01">
+      <select class="fi" id="txn-category">
+        <option value="">Category</option>
+        <option>Allowance</option><option>Job</option><option>Gift</option>
+        <option>Savings</option><option>Food</option><option>Entertainment</option>
+        <option>Clothes</option><option>Other</option>
+      </select>
+      <select class="fi" id="txn-recurring">
+        <option value="once">One-time</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+      <button class="btn-search full" style="margin-top:0;justify-content:center;" id="add-txn-btn">+ Add Transaction</button>
+    </div>
+  </div>
+  <div class="card">
+    <label class="card-label">Transactions</label>
+    <div id="txn-list"><div class="no-txns">No transactions yet — add one above!</div></div>
+  </div>
+</div>
+
+<!-- STEM -->
+<div id="page-stem" class="page">
+  <div class="page-title">🔬 STEM Hub</div>
+  <div class="page-subtitle">Formulas, college planning, and AI-powered project ideas.</div>
+  <div class="stem-subtabs">
+    <button class="stem-subtab active" data-stem="formulas">📐 Formulas</button>
+    <button class="stem-subtab" data-stem="college">🎓 College</button>
+    <button class="stem-subtab" data-stem="projects">⚗️ Projects</button>
+    <button class="stem-subtab" data-stem="saved-proj">⭐ Saved</button>
+  </div>
+  <div id="stem-formulas" class="stem-page active">
+    <input type="text" class="formula-search" id="formula-search" placeholder="🔍 Search formulas...">
+    <div class="quiz-toggle">
+      <div class="toggle-switch" id="quiz-toggle"><div class="toggle-knob"></div></div>
+      <span class="quiz-label">Quiz mode — tap equation to reveal</span>
+    </div>
+    <div class="subject-chips">
+      <span class="subject-chip active" data-subject="all">All</span>
+      <span class="subject-chip" data-subject="Math">📐 Math</span>
+      <span class="subject-chip" data-subject="Geometry">📏 Geometry</span>
+      <span class="subject-chip" data-subject="Trigonometry">📐 Trig</span>
+      <span class="subject-chip" data-subject="Physics">⚡ Physics</span>
+      <span class="subject-chip" data-subject="Chemistry">🧪 Chemistry</span>
+      <span class="subject-chip" data-subject="Biology">🧬 Biology</span>
+      <span class="subject-chip" data-subject="Earth Science">🌍 Earth Sci</span>
+    </div>
+    <div id="formula-list"></div>
+  </div>
+  <div id="stem-college" class="stem-page">
+    <div class="card">
+      <label class="card-label">What do you want to study?</label>
+      <textarea id="college-prompt" placeholder="e.g. computer science, marine biology, architecture, medicine..."></textarea>
+      <div class="filters">
+        <div class="filter-group">
+          <span class="filter-label">GPA:</span>
+          <span class="filter-chip active" data-group="gpa" data-val="any GPA">Any</span>
+          <span class="filter-chip" data-group="gpa" data-val="around 2.5-3.0 GPA">2.5–3.0</span>
+          <span class="filter-chip" data-group="gpa" data-val="around 3.0-3.5 GPA">3.0–3.5</span>
+          <span class="filter-chip" data-group="gpa" data-val="around 3.5-4.0 GPA">3.5–4.0</span>
+        </div>
+      </div>
+      <button class="btn-search" id="college-btn">✨ Find Colleges</button>
+    </div>
+    <div id="college-results"></div>
+  </div>
+  <div id="stem-projects" class="stem-page">
+    <div class="card">
+      <label class="card-label">What STEM topic interests you?</label>
+      <textarea id="project-prompt" placeholder="e.g. robotics, coding, chemistry experiments, environmental science..."></textarea>
+      <div class="filters">
+        <div class="filter-group">
+          <span class="filter-label">Time:</span>
+          <span class="filter-chip active" data-group="projt" data-val="any time frame">Any</span>
+          <span class="filter-chip" data-group="projt" data-val="1 day">1 Day</span>
+          <span class="filter-chip" data-group="projt" data-val="1 week">1 Week</span>
+          <span class="filter-chip" data-group="projt" data-val="1 month">1 Month</span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Level:</span>
+          <span class="filter-chip active" data-group="projd" data-val="any level">Any</span>
+          <span class="filter-chip" data-group="projd" data-val="beginner">Beginner</span>
+          <span class="filter-chip" data-group="projd" data-val="intermediate">Intermediate</span>
+          <span class="filter-chip" data-group="projd" data-val="advanced">Advanced</span>
+        </div>
+      </div>
+      <button class="btn-search" id="project-btn">✨ Generate Projects</button>
+    </div>
+    <div id="project-results"></div>
+  </div>
+  <div id="stem-saved-proj" class="stem-page"><div id="saved-proj-list"></div></div>
+</div>
+
+<button id="back-top" title="Back to top">↑</button>
+
+<script>
+// ═══ SAFE STORAGE ═══
+function safeGet(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e) { return fallback; }
+}
+function safeSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+
+// ═══ STATE ═══
+// Multi-storage key load for reliability
+function saveApiKey(val) {
+  try { localStorage.setItem('tk_groq_key', val); } catch(e){}
+  try { sessionStorage.setItem('tk_groq_key', val); } catch(e){}
+  try {
+    const d = new Date(); d.setFullYear(d.getFullYear()+1);
+    document.cookie = 'tk_groq_key=' + encodeURIComponent(val) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+  } catch(e){}
+}
+function loadApiKey() {
+  try { const v = localStorage.getItem('tk_groq_key'); if(v) return v; } catch(e){}
+  try { const v = sessionStorage.getItem('tk_groq_key'); if(v) { saveApiKey(v); return v; } } catch(e){}
+  try {
+    const match = document.cookie.match(/(?:^|; )tk_groq_key=([^;]*)/);
+    if (match) { const v = decodeURIComponent(match[1]); saveApiKey(v); return v; }
+  } catch(e){}
+  return '';
+}
+let apiKey = 'PASTE_YOUR_GROQ_KEY_HERE'; // Replace PASTE_YOUR_GROQ_KEY_HERE with your gsk_... key
+let transactions = safeGet('tk_transactions', []);
+let goalData = safeGet('tk_goal', null);
+let favourites = safeGet('tk_favourites', {});
+let savedProjects = safeGet('tk_saved_projects', []);
+let txnType = 'income';
+let formulaSubject = 'all';
+let quizMode = false;
+let isLight = localStorage.getItem('tk_theme') === 'light';
+let mealServings = 2;
+let snackServings = 1;
+let lastMealPrompt = '', lastSnackPrompt = '', lastMealFilters = {}, lastSnackFilters = {};
+
+// ═══ FORMULAS DATA (40+) ═══
+const FORMULAS = [
+  // MATH
+  {name:'Pythagorean Theorem',subject:'Math',eq:'a² + b² = c²',exp:'In a right triangle, c (hypotenuse) squared equals a² + b². Example: a=3, b=4 → c=5.'},
+  {name:'Quadratic Formula',subject:'Math',eq:'x = (−b ± √(b²−4ac)) / 2a',exp:'Solves ax²+bx+c=0. The ± gives two answers. If b²−4ac < 0, no real solutions exist.'},
+  {name:'Slope of a Line',subject:'Math',eq:'m = (y₂ − y₁) / (x₂ − x₁)',exp:'Rise over run. Positive = goes up, negative = goes down, zero = flat, undefined = vertical.'},
+  {name:'Slope-Intercept Form',subject:'Math',eq:'y = mx + b',exp:'m is the slope, b is the y-intercept (where line crosses y-axis). The standard way to write a line.'},
+  {name:'Area of a Circle',subject:'Math',eq:'A = πr²',exp:'π ≈ 3.14159. r = radius (half the diameter). Example: r=5 → A = 78.54 square units.'},
+  {name:'Circumference',subject:'Math',eq:'C = 2πr',exp:'The perimeter of a circle. r = radius. Example: r=7 → C = 43.98 units.'},
+  {name:'Distance Formula',subject:'Math',eq:'d = √((x₂−x₁)² + (y₂−y₁)²)',exp:'Straight-line distance between two coordinate points. Derived from the Pythagorean theorem.'},
+  {name:'Midpoint Formula',subject:'Math',eq:'M = ((x₁+x₂)/2, (y₁+y₂)/2)',exp:'The exact middle point between two coordinate points. Average the x-values and average the y-values.'},
+  {name:'Percentage Formula',subject:'Math',eq:'% = (part / whole) × 100',exp:'Convert a fraction to a percentage. Example: 18 out of 24 → (18/24) × 100 = 75%.'},
+  {name:'Simple Interest',subject:'Math',eq:'I = PRT',exp:'Interest = Principal × Rate × Time. P = starting amount, R = rate (as decimal), T = years.'},
+  // GEOMETRY
+  {name:'Area of a Triangle',subject:'Geometry',eq:'A = ½bh',exp:'b = base length, h = perpendicular height. The height must be at a right angle to the base.'},
+  {name:'Area of a Rectangle',subject:'Geometry',eq:'A = lw',exp:'l = length, w = width. Also works for squares (since length = width).'},
+  {name:'Area of a Trapezoid',subject:'Geometry',eq:'A = ½(a + b)h',exp:'a and b are the two parallel sides, h is the height between them.'},
+  {name:'Volume of a Cube',subject:'Geometry',eq:'V = s³',exp:'s = side length. All sides of a cube are equal, so multiply side × side × side.'},
+  {name:'Volume of a Cylinder',subject:'Geometry',eq:'V = πr²h',exp:'r = radius of the circular base, h = height. Think of it as the area of the circle times the height.'},
+  {name:'Volume of a Sphere',subject:'Geometry',eq:'V = (4/3)πr³',exp:'r = radius of the sphere. Example: r=3 → V ≈ 113.1 cubic units.'},
+  {name:'Surface Area of a Sphere',subject:'Geometry',eq:'SA = 4πr²',exp:'r = radius. The total outer surface area of a sphere. Example: r=5 → SA ≈ 314.16 sq units.'},
+  {name:"Euler's Formula (Polyhedra)",subject:'Geometry',eq:'V − E + F = 2',exp:'For any convex polyhedron: Vertices minus Edges plus Faces always equals 2. Example: a cube has 8V, 12E, 6F → 8−12+6=2.'},
+  // TRIGONOMETRY
+  {name:'SOH-CAH-TOA',subject:'Trigonometry',eq:'sin=O/H, cos=A/H, tan=O/A',exp:'In a right triangle: sin = Opposite/Hypotenuse, cos = Adjacent/Hypotenuse, tan = Opposite/Adjacent.'},
+  {name:'Pythagorean Identity',subject:'Trigonometry',eq:'sin²θ + cos²θ = 1',exp:'Always true for any angle θ. Derived from the Pythagorean theorem applied to the unit circle.'},
+  {name:'Law of Sines',subject:'Trigonometry',eq:'a/sin A = b/sin B = c/sin C',exp:'Used to find missing sides or angles in any triangle (not just right triangles).'},
+  {name:'Law of Cosines',subject:'Trigonometry',eq:'c² = a² + b² − 2ab·cos C',exp:'Generalises the Pythagorean theorem to any triangle. When C=90°, it reduces to a²+b²=c².'},
+  // PHYSICS
+  {name:"Newton's Second Law",subject:'Physics',eq:'F = ma',exp:'Force = mass × acceleration. Units: Newtons (N), kg, m/s². Rearrange: a=F/m or m=F/a.'},
+  {name:'Kinetic Energy',subject:'Physics',eq:'KE = ½mv²',exp:'Energy of a moving object. Velocity is squared — doubling speed quadruples energy.'},
+  {name:"Ohm's Law",subject:'Physics',eq:'V = IR',exp:'Voltage = Current × Resistance. Fundamental for all circuits. Rearrange: I=V/R or R=V/I.'},
+  {name:'Speed Formula',subject:'Physics',eq:'v = d / t',exp:'Speed = distance ÷ time. Rearrange: d=v×t or t=d/v. Works in any consistent unit system.'},
+  {name:'Gravitational PE',subject:'Physics',eq:'PE = mgh',exp:'Potential energy from height. m=mass (kg), g=9.8 m/s², h=height (m).'},
+  {name:'Work Done',subject:'Physics',eq:'W = Fd·cos θ',exp:'Work = Force × distance × cos(angle between force and motion). When force and motion are parallel, cos θ=1.'},
+  {name:'Power',subject:'Physics',eq:'P = W / t',exp:'Power = Work done ÷ time taken. Units: Watts (W). Also P = Fv (force × velocity).'},
+  {name:"Hooke's Law",subject:'Physics',eq:'F = kx',exp:'Spring force = spring constant × extension. k is the stiffness of the spring, x is how much it stretches.'},
+  // CHEMISTRY
+  {name:'Ideal Gas Law',subject:'Chemistry',eq:'PV = nRT',exp:'Pressure × Volume = moles × gas constant × Temperature. R = 8.314 J/(mol·K).'},
+  {name:'Molarity',subject:'Chemistry',eq:'M = moles / liters',exp:'Concentration of a solution. 1M = 1 mole dissolved in 1 liter.'},
+  {name:'pH Scale',subject:'Chemistry',eq:'pH = −log[H⁺]',exp:'pH 7 = neutral. Below 7 = acidic. Above 7 = alkaline. Each unit = 10× change.'},
+  {name:"Avogadro's Number",subject:'Chemistry',eq:'1 mol = 6.022 × 10²³ particles',exp:"One mole of any substance contains 6.022 × 10²³ atoms, molecules, or particles. It's a counting unit like a dozen but much larger."},
+  // BIOLOGY
+  {name:'Photosynthesis',subject:'Biology',eq:'6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂',exp:'Plants convert CO₂ and water into glucose and oxygen using sunlight.'},
+  {name:'Cellular Respiration',subject:'Biology',eq:'C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + ATP',exp:'Cells break down glucose using oxygen to release energy as ATP.'},
+  {name:'Hardy-Weinberg Equilibrium',subject:'Biology',eq:'p² + 2pq + q² = 1',exp:'Predicts allele frequencies in a stable population. p = dominant allele frequency, q = recessive.'},
+  // EARTH SCIENCE
+  {name:'Richter Scale',subject:'Earth Science',eq:'M = log(A) − log(A₀)',exp:'Measures earthquake magnitude. Each whole number increase = 10× more ground motion and ~31.6× more energy.'},
+  {name:'Density Formula',subject:'Earth Science',eq:'ρ = m / V',exp:'Density = mass ÷ volume. Used in geology to identify minerals. Units: g/cm³ or kg/m³.'},
+  {name:"Kepler's Third Law",subject:'Earth Science',eq:'T² ∝ a³',exp:"A planet's orbital period squared is proportional to its semi-major axis cubed. Explains why outer planets take longer to orbit the Sun."},
+  {name:'Heat Transfer',subject:'Earth Science',eq:'Q = mcΔT',exp:'Heat energy = mass × specific heat capacity × temperature change. Used to understand how rocks, water, and atmosphere absorb heat.'},
+];
+
+const CHART_COLORS = ['#c8f135','#7c6af7','#f76a8a','#38bdf8','#ffb432','#34d399','#f59e0b','#a78bfa'];
+
+// ═══ ONBOARDING ═══
+const OB_STEPS = [
+  {icon:'🍽',title:'Cook anything',desc:'Describe what you want and get full step-by-step recipes scaled to your serving size instantly.'},
+  {icon:'💰',title:'Track your money',desc:'Log your allowance, jobs and spending. Set savings goals and watch your progress with a live chart.'},
+  {icon:'🔬',title:'Ace your studies',desc:'Browse 40+ formulas with quiz mode, get college recommendations, and generate AI project ideas.'},
+];
+let obStep = 0;
+
+function renderOnboarding() {
+  const s = OB_STEPS[obStep];
+  document.getElementById('ob-content').innerHTML = '<div class="ob-icon">'+s.icon+'</div><div class="ob-title">'+s.title+'</div><div class="ob-desc">'+s.desc+'</div>';
+  OB_STEPS.forEach(function(_,i){ const d=document.getElementById('ob-dot-'+i); if(d) d.className='ob-dot'+(i===obStep?' active':''); });
+  document.getElementById('ob-next').textContent = obStep===OB_STEPS.length-1?"Let's go! 🚀":'Next →';
+}
+
+function closeOnboarding() {
+  document.getElementById('onboarding').classList.add('hidden');
+  safeSet('tk_onboarded', true);
+  if (!apiKey) document.getElementById('settings-overlay').classList.remove('hidden');
+}
+
+if (safeGet('tk_onboarded', false)) {
+  document.getElementById('onboarding').classList.add('hidden');
+  if (!apiKey) document.getElementById('settings-overlay').classList.remove('hidden');
+} else { renderOnboarding(); }
+
+document.getElementById('ob-next').addEventListener('click', function() {
+  if (obStep < OB_STEPS.length-1) { obStep++; renderOnboarding(); } else closeOnboarding();
+});
+document.getElementById('ob-skip').addEventListener('click', closeOnboarding);
+
+// ═══ THEME ═══
+function applyTheme() {
+  document.body.classList.toggle('light', isLight);
+  document.getElementById('theme-btn').textContent = isLight ? '🌙' : '☀️';
+}
+applyTheme();
+document.getElementById('theme-btn').addEventListener('click', function() {
+  isLight = !isLight;
+  try { localStorage.setItem('tk_theme', isLight ? 'light' : 'dark'); } catch(e){}
+  applyTheme();
+  setTimeout(drawPieChart, 100);
+});
+
+// ═══ SETTINGS ═══
+document.getElementById('save-key-btn').addEventListener('click', function() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val.startsWith('gsk_')) { alert('Please enter a valid Groq API key — starts with gsk_'); return; }
+  apiKey = val;
+  saveApiKey(val);
+  document.getElementById('settings-overlay').classList.add('hidden');
+});
+document.getElementById('open-settings-btn').addEventListener('click', function() {
+  document.getElementById('api-key-input').value = apiKey;
+  document.getElementById('settings-overlay').classList.remove('hidden');
+});
+
+// ═══ BACK TO TOP ═══
+const backTop = document.getElementById('back-top');
+window.addEventListener('scroll', function() {
+  backTop.classList.toggle('visible', window.scrollY > 300);
+});
+backTop.addEventListener('click', function() { window.scrollTo({top:0,behavior:'smooth'}); });
+
+// ═══ PULL TO REFRESH ═══
+let ptrStart = 0, ptrActive = false;
+document.addEventListener('touchstart', function(e) { ptrStart = e.touches[0].clientY; }, {passive:true});
+document.addEventListener('touchmove', function(e) {
+  if (window.scrollY > 0) return;
+  const dist = e.touches[0].clientY - ptrStart;
+  if (dist > 60 && !ptrActive) {
+    ptrActive = true;
+    document.getElementById('ptr').classList.add('visible');
+    document.getElementById('ptr-icon').style.transform = 'rotate(180deg)';
+  }
+}, {passive:true});
+document.addEventListener('touchend', function() {
+  if (ptrActive) {
+    ptrActive = false;
+    document.getElementById('ptr').classList.remove('visible');
+    document.getElementById('ptr-icon').style.transform = '';
+    const activeBtn = document.querySelector('.page.active #meal-btn, .page.active #snack-btn');
+    if (activeBtn && !activeBtn.disabled) activeBtn.click();
+  }
+});
+
+// ═══ NAV ═══
+document.querySelectorAll('.nav-tab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+    document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
+    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+document.querySelectorAll('.stem-subtab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.stem-page').forEach(function(p){p.classList.remove('active');});
+    document.querySelectorAll('.stem-subtab').forEach(function(t){t.classList.remove('active');});
+    document.getElementById('stem-'+btn.dataset.stem).classList.add('active');
+    btn.classList.add('active');
+    if (btn.dataset.stem==='saved-proj') renderSavedProjects();
+  });
+});
+document.querySelectorAll('.section-tab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    const p = btn.dataset.parent;
+    document.querySelectorAll('[data-parent="'+p+'"]').forEach(function(t){t.classList.remove('active');});
+    document.getElementById(p+'-gen').classList.remove('active');
+    document.getElementById(p+'-favs').classList.remove('active');
+    document.getElementById(btn.dataset.sub).classList.add('active');
+    btn.classList.add('active');
+    if (btn.dataset.sub.includes('favs')) renderFavourites(p);
+  });
+});
+
+// ═══ FILTERS ═══
+document.querySelectorAll('.filter-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    const g = chip.dataset.group;
+    document.querySelectorAll('[data-group="'+g+'"]').forEach(function(c){c.classList.remove('active');});
+    chip.classList.add('active');
+  });
+});
+document.querySelectorAll('.subject-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.subject-chip').forEach(function(c){c.classList.remove('active');});
+    chip.classList.add('active');
+    formulaSubject = chip.dataset.subject;
+    renderFormulas();
+  });
+});
+document.querySelectorAll('.ingredient-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    chip.classList.toggle('selected');
+    const sel=[];
+    document.querySelectorAll('.ingredient-chip.selected').forEach(function(c){sel.push(c.dataset.ing);});
+    document.getElementById('snack-prompt').value = sel.join(', ');
+  });
+});
+
+function getFilter(group) {
+  const el = document.querySelector('[data-group="'+group+'"].active');
+  return el ? el.dataset.val : 'any';
+}
+
+// ═══ SERVING SIZE ═══
+document.getElementById('meal-serv-minus').addEventListener('click', function() {
+  if (mealServings > 1) { mealServings--; document.getElementById('meal-serv-count').textContent = mealServings; }
+});
+document.getElementById('meal-serv-plus').addEventListener('click', function() {
+  if (mealServings < 10) { mealServings++; document.getElementById('meal-serv-count').textContent = mealServings; }
+});
+document.getElementById('snack-serv-minus').addEventListener('click', function() {
+  if (snackServings > 1) { snackServings--; document.getElementById('snack-serv-count').textContent = snackServings; }
+});
+document.getElementById('snack-serv-plus').addEventListener('click', function() {
+  if (snackServings < 10) { snackServings++; document.getElementById('snack-serv-count').textContent = snackServings; }
+});
+
+// ═══ GROQ API with retry ═══
+async function callGroq(prompt, retries) {
+  retries = retries || 0;
+  if (!apiKey) {
+    document.getElementById('api-key-input').value = '';
+    document.getElementById('settings-overlay').classList.remove('hidden');
+    throw new Error('No API key — please enter your Groq key');
+  }
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body: JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:2000,temperature:0.7})
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const msg = (data && data.error) ? data.error.message : 'API error '+res.status;
+      if (res.status === 429 && retries < 2) {
+        await new Promise(function(r){ setTimeout(r, 3000); });
+        return callGroq(prompt, retries+1);
+      }
+      throw new Error(msg);
+    }
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error('Unexpected response from AI. Please try again.');
+    return data.choices[0].message.content;
+  } catch(e) {
+    if (e.name === 'TypeError' && retries < 2) {
+      await new Promise(function(r){ setTimeout(r, 2000); });
+      return callGroq(prompt, retries+1);
+    }
+    throw e;
+  }
+}
+
+function parseJSON(text) {
+  if (!text) throw new Error('Empty response from AI. Please try again.');
+  const m = text.match(/```json\s*([\s\S]*?)```/) || text.match(/(\[[\s\S]*\])/) || text.match(/(\{[\s\S]*\})/);
+  if (!m) throw new Error('Could not read AI response. Please try again.');
+  try { return JSON.parse(m[1]); }
+  catch(e) { throw new Error('AI returned invalid data. Please try again.'); }
+}
+
+function loadingHTML(msg) {
+  return '<div class="loading"><span class="spinner">🔄</span>'+msg+'</div>';
+}
+
+function errorHTML(msg, retryFn) {
+  return '<div class="error-msg">⚠️ '+msg+'<br><button class="retry-btn" onclick="('+retryFn+')()">↻ Try again</button></div>';
+}
+
+// ═══ FAVOURITES ═══
+function saveFavourite(type, recipe) {
+  if (!favourites[type]) favourites[type] = [];
+  const idx = favourites[type].findIndex(function(r){ return r.name===recipe.name; });
+  if (idx >= 0) { favourites[type].splice(idx,1); safeSet('tk_favourites',favourites); return false; }
+  else { favourites[type].push(recipe); safeSet('tk_favourites',favourites); return true; }
+}
+function isFavourite(type, name) {
+  return !!(favourites[type] && favourites[type].some(function(r){ return r.name===name; }));
+}
+function renderFavourites(type) {
+  const container = document.getElementById(type+'-favs-list');
+  const list = favourites[type] || [];
+  if (!list.length) { container.innerHTML='<div class="empty-favs"><div class="icon">💔</div><h3>No favourites yet</h3><p>Tap ❤️ on any recipe to save it here.</p></div>'; return; }
+  container.innerHTML = '<div class="results-header">'+list.length+' saved recipe'+(list.length!==1?'s':'')+'</div>';
+  list.forEach(function(r){ container.appendChild(buildRecipeCard(r,type)); });
+}
+
+// ═══ RECIPE CARD BUILDER ═══
+function buildRecipeCard(r, favType) {
+  const dc = r.difficulty==='Easy'?'tag-easy':r.difficulty==='Medium'?'tag-medium':'tag-hard';
+  const faved = isFavourite(favType, r.name);
+  const card = document.createElement('div');
+  card.className = 'recipe-card';
+  card.innerHTML =
+    '<div class="recipe-card-header"><div class="recipe-card-left"><div class="recipe-name">'+r.name+'</div>'+
+    '<div class="recipe-tags"><span class="tag tag-time">⏱ '+r.time+'</span><span class="tag '+dc+'">⚡ '+r.difficulty+'</span></div></div>'+
+    '<div class="recipe-card-right">'+
+    '<button class="fav-btn" title="Save to favourites">'+(faved?'❤️':'🤍')+'</button>'+
+    '<button class="share-btn" title="Share">📤</button>'+
+    '<span class="expand-icon">▼</span></div></div>'+
+    '<div class="recipe-body"><div class="section-title">Ingredients</div>'+
+    '<div class="ingredients-list">'+r.ingredients.map(function(i){ return '<span class="ingredient-tag">'+i+'</span>'; }).join('')+'</div>'+
+    '<div class="section-title">Steps</div>'+
+    '<ol class="steps-list">'+r.steps.map(function(s){ return '<li>'+s+'</li>'; }).join('')+'</ol></div>';
+
+  card.querySelector('.recipe-card-header').addEventListener('click', function(e) {
+    if (e.target.closest('.fav-btn')||e.target.closest('.share-btn')) return;
+    card.classList.toggle('open');
+  });
+  card.querySelector('.fav-btn').addEventListener('click', function() {
+    const added = saveFavourite(favType, r);
+    this.textContent = added?'❤️':'🤍';
+  });
+  card.querySelector('.share-btn').addEventListener('click', function() {
+    const text = r.name+'\n\nIngredients:\n'+r.ingredients.join('\n')+'\n\nSteps:\n'+r.steps.map(function(s,i){ return (i+1)+'. '+s; }).join('\n');
+    if (navigator.share) { navigator.share({title:r.name,text:text}).catch(function(){}); }
+    else if (navigator.clipboard) { navigator.clipboard.writeText(text).then(function(){ alert('Recipe copied to clipboard!'); }).catch(function(){ alert('Could not copy. Please copy manually.'); }); }
+    else { alert('Sharing not supported on this browser.'); }
+  });
+  return card;
+}
+
+function renderRecipes(recipes, container, favType) {
+  if (!Array.isArray(recipes) || !recipes.length) {
+    container.innerHTML='<div style="text-align:center;padding:36px;color:var(--text-muted)">No results — try different filters.</div>';
+    return;
+  }
+  container.innerHTML='<div class="results-header">'+recipes.length+' recipe'+(recipes.length!==1?'s':'')+' found</div>';
+  recipes.forEach(function(r){ if(r&&r.name) container.appendChild(buildRecipeCard(r,favType)); });
+}
+
+// ═══ MEALS ═══
+function generateMeals() {
+  const query = document.getElementById('meal-prompt').value.trim();
+  if (!query) { alert('Please describe what you want to make!'); return; }
+  const t=getFilter('mt'), d=getFilter('md'), diet=getFilter('mdiet');
+  const btn=document.getElementById('meal-btn'), results=document.getElementById('meal-results');
+  btn.disabled=true; btn.textContent='⏳ Generating...';
+  results.innerHTML=loadingHTML('Finding the best recipes for you...');
+  callGroq('You are a professional recipe writer. Generate exactly 6 meal recipes for: "'+query+'". Servings: '+mealServings+'. Time: '+(t==='any'?'any':t)+', Difficulty: '+(d==='any'?'any':d)+', Diet: '+diet+'. Scale ALL ingredient amounts for '+mealServings+' serving'+(mealServings!==1?'s':'')+'. Return ONLY a valid JSON array, no other text:\n[{"name":"","time":"15 minutes","difficulty":"Easy","ingredients":["amount ingredient"],"steps":["Step one"]}]\nRules: 6-10 ingredients with exact scaled amounts. 4-7 steps each. Each step must be 1-2 full sentences explaining precisely what to do and how to do it. Write like a professional recipe book — purely instructional, no encouragement, no filler phrases, no commentary. Do NOT say things like "enjoy", "be careful", "delicious", "breathe in the aroma" or any motivational phrases.')
+  .then(function(text) { renderRecipes(parseJSON(text), results, 'meals'); })
+  .catch(function(e) { results.innerHTML=errorHTML(e.message||'Something went wrong.','generateMeals'); })
+  .finally(function() { btn.disabled=false; btn.innerHTML='✨ Generate Meals'; });
+}
+document.getElementById('meal-btn').addEventListener('click', generateMeals);
+
+// ═══ SNACKS ═══
+function generateSnacks() {
+  const ingredients = document.getElementById('snack-prompt').value.trim();
+  if (!ingredients) { alert('Tell us what ingredients you have, or tap the chips above!'); return; }
+  const t=getFilter('st'), d=getFilter('sd'), diet=getFilter('sdiet');
+  const btn=document.getElementById('snack-btn'), results=document.getElementById('snack-results');
+  btn.disabled=true; btn.textContent='⏳ Generating...';
+  results.innerHTML=loadingHTML('Finding snacks with what you have...');
+  callGroq('You are a professional recipe writer. The user has: "'+ingredients+'". Servings: '+snackServings+'. Time: '+(t==='any'?'any':t)+', Difficulty: '+(d==='any'?'any':d)+', Diet: '+diet+'. Generate exactly 6 snack ideas using mostly these ingredients. Scale ALL amounts for '+snackServings+' serving'+(snackServings!==1?'s':'')+'. Return ONLY a valid JSON array:\n[{"name":"","time":"5 minutes","difficulty":"Easy","ingredients":["amount ingredient"],"steps":["Step one"]}]\nRules: 3-6 ingredients with exact scaled amounts. 2-5 steps each. Each step must be a full precise sentence. Write like a professional recipe book — purely instructional, no encouragement, no filler, no commentary. Do NOT use words like "enjoy", "delicious", "be careful" or any motivational language.')
+  .then(function(text) { renderRecipes(parseJSON(text), results, 'snacks'); })
+  .catch(function(e) { results.innerHTML=errorHTML(e.message||'Something went wrong.','generateSnacks'); })
+  .finally(function() { btn.disabled=false; btn.innerHTML='✨ Generate Snacks'; });
+}
+document.getElementById('snack-btn').addEventListener('click', generateSnacks);
+
+// ═══ MONEY ═══
+document.getElementById('type-income').addEventListener('click', function() {
+  txnType='income';
+  document.getElementById('type-income').className='type-btn ai';
+  document.getElementById('type-expense').className='type-btn';
+});
+document.getElementById('type-expense').addEventListener('click', function() {
+  txnType='expense';
+  document.getElementById('type-income').className='type-btn';
+  document.getElementById('type-expense').className='type-btn ae';
+});
+document.getElementById('set-goal-btn').addEventListener('click', function() {
+  const name=document.getElementById('goal-name').value.trim();
+  const target=parseFloat(document.getElementById('goal-target').value);
+  if (!name) { alert('Please enter a goal name.'); return; }
+  if (isNaN(target)||target<=0) { alert('Please enter a valid target amount.'); return; }
+  goalData={name:name,target:target};
+  safeSet('tk_goal',goalData);
+  renderGoal();
+});
+document.getElementById('add-txn-btn').addEventListener('click', function() {
+  const desc=document.getElementById('txn-desc').value.trim();
+  const amount=parseFloat(document.getElementById('txn-amount').value);
+  const category=document.getElementById('txn-category').value||'Other';
+  const recurring=document.getElementById('txn-recurring').value;
+  if (!desc) { alert('Please enter a description.'); return; }
+  if (isNaN(amount)||amount<=0) { alert('Please enter a valid amount greater than 0.'); return; }
+  transactions.unshift({id:Date.now(),desc:desc,amount:amount,category:category,recurring:recurring,type:txnType,date:new Date().toLocaleDateString()});
+  safeSet('tk_transactions',transactions);
+  document.getElementById('txn-desc').value='';
+  document.getElementById('txn-amount').value='';
+  renderTransactions(); updateMoneyStats();
+});
+
+function deleteTransaction(id) {
+  transactions=transactions.filter(function(t){ return t.id!==id; });
+  safeSet('tk_transactions',transactions);
+  renderTransactions(); updateMoneyStats();
+}
+
+function renderTransactions() {
+  const el=document.getElementById('txn-list');
+  if (!transactions.length) { el.innerHTML='<div class="no-txns">No transactions yet — add one above!</div>'; return; }
+  el.innerHTML=transactions.map(function(t){
+    return '<div class="txn-item"><div class="txn-details"><div class="txn-name">'+t.desc+'</div><div class="txn-meta">'+t.category+' · '+(t.recurring!=='once'?t.recurring:t.date)+'</div></div><div class="txn-amount '+t.type+'">'+(t.type==='income'?'+':'−')+'$'+t.amount.toFixed(2)+'</div><button class="txn-delete" onclick="deleteTransaction('+t.id+')" title="Delete">✕</button></div>';
+  }).join('');
+}
+
+function updateMoneyStats() {
+  let earned=0, spent=0;
+  transactions.forEach(function(t){ if(t.type==='income') earned+=t.amount; else spent+=t.amount; });
+  const balance=earned-spent;
+  document.getElementById('stat-balance').textContent='$'+balance.toFixed(2);
+  document.getElementById('stat-balance').className='stat-value '+(balance>=0?'pos':'neg');
+  document.getElementById('stat-earned').textContent='$'+earned.toFixed(2);
+  document.getElementById('stat-spent').textContent='$'+spent.toFixed(2);
+  if (goalData) updateGoalBar(earned);
+  drawPieChart();
+}
+
+function renderGoal() {
+  document.getElementById('goal-display').style.display='block';
+  document.getElementById('goal-label').textContent='🎯 '+goalData.name;
+  const earned=transactions.filter(function(t){ return t.type==='income'; }).reduce(function(s,t){ return s+t.amount; },0);
+  updateGoalBar(earned);
+}
+
+function updateGoalBar(earned) {
+  if (!goalData) return;
+  const pct=Math.min(100,Math.round((earned/goalData.target)*100));
+  document.getElementById('goal-bar').style.width=pct+'%';
+  document.getElementById('goal-percent').textContent=pct+'%';
+  document.getElementById('goal-progress').textContent='$'+earned.toFixed(2)+' saved';
+  document.getElementById('goal-remaining').textContent=earned>=goalData.target?'🎉 Goal reached!':'$'+(goalData.target-earned).toFixed(2)+' to go';
+}
+
+function drawPieChart() {
+  try {
+    const canvas=document.getElementById('spend-canvas');
+    const ctx=canvas.getContext('2d');
+    const expenses=transactions.filter(function(t){ return t.type==='expense'; });
+    const legend=document.getElementById('chart-legend');
+    if (!expenses.length) {
+      ctx.clearRect(0,0,130,130);
+      legend.innerHTML='<span style="color:var(--text-muted);font-size:.8rem;">Add expenses to see chart</span>';
+      return;
+    }
+    const cats={};
+    expenses.forEach(function(t){ cats[t.category]=(cats[t.category]||0)+t.amount; });
+    const total=Object.values(cats).reduce(function(a,b){ return a+b; },0);
+    const keys=Object.keys(cats);
+    let start=-Math.PI/2;
+    ctx.clearRect(0,0,130,130);
+    keys.forEach(function(k,i){
+      const slice=(cats[k]/total)*2*Math.PI;
+      ctx.beginPath(); ctx.moveTo(65,65);
+      ctx.arc(65,65,55,start,start+slice);
+      ctx.closePath(); ctx.fillStyle=CHART_COLORS[i%CHART_COLORS.length]; ctx.fill();
+      start+=slice;
+    });
+    const bgColor = isLight ? '#ffffff' : '#16161d';
+    ctx.beginPath(); ctx.arc(65,65,26,0,2*Math.PI); ctx.fillStyle=bgColor; ctx.fill();
+    legend.innerHTML=keys.map(function(k,i){
+      return '<div class="legend-item"><div class="legend-dot" style="background:'+CHART_COLORS[i%CHART_COLORS.length]+'"></div>'+k+' — $'+cats[k].toFixed(2)+'</div>';
+    }).join('');
+  } catch(e) {}
+}
+
+// ═══ FORMULAS ═══
+document.getElementById('quiz-toggle').addEventListener('click', function() {
+  quizMode=!quizMode; this.classList.toggle('on',quizMode); renderFormulas();
+});
+document.getElementById('formula-search').addEventListener('input', function() {
+  renderFormulas(this.value.toLowerCase());
+});
+
+function renderFormulas(search) {
+  let filtered = formulaSubject==='all' ? FORMULAS : FORMULAS.filter(function(f){ return f.subject===formulaSubject; });
+  if (search) filtered=filtered.filter(function(f){ return f.name.toLowerCase().includes(search)||f.subject.toLowerCase().includes(search)||f.eq.toLowerCase().includes(search); });
+  const subClass = function(s){ return 'fsub-'+s.toLowerCase().replace(' ',''); };
+  document.getElementById('formula-list').innerHTML = filtered.map(function(f,i){
+    const safeEq = f.eq.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const eqHtml = quizMode
+      ? '<div class="quiz-eq-hidden" onclick="this.outerHTML=\'<div class=\\\"formula-equation\\\">'+safeEq+'</div>\'">Tap to reveal equation</div>'
+      : '<div class="formula-equation">'+f.eq+'</div>';
+    return '<div class="formula-card" id="fc-'+i+'"><div class="formula-top"><div class="formula-left"><div class="formula-name">'+f.name+'</div><span class="fsub '+subClass(f.subject)+'">'+f.subject+'</span></div><span class="fchev">▼</span></div>'+eqHtml+'<div class="formula-explanation">'+f.exp+'</div></div>';
+  }).join('');
+  document.querySelectorAll('.formula-card').forEach(function(card){
+    card.querySelector('.formula-top').addEventListener('click', function(){ card.classList.toggle('open'); });
+  });
+}
+
+// ═══ COLLEGE ═══
+function generateCollege() {
+  const query=document.getElementById('college-prompt').value.trim();
+  if (!query) { alert('Please enter what you want to study!'); return; }
+  const gpa=getFilter('gpa');
+  const btn=document.getElementById('college-btn'), results=document.getElementById('college-results');
+  btn.disabled=true; btn.textContent='⏳ Searching...';
+  results.innerHTML=loadingHTML('Finding the best colleges for you...');
+  callGroq('You are an encouraging college counselor for a teenager. They want to study: "'+query+'". GPA: '+gpa+'. Recommend exactly 4 real colleges — a mix of Reach, Match, and Safety. Return ONLY a valid JSON array:\n[{"name":"College Name","type":"Match","location":"City, State","why":"2-3 sentences about why great for this field","requirements":["Req 1","Req 2","Req 3"],"tip":"One specific encouraging action to improve chances"}]\nType = Reach, Match, or Safety. Be warm and genuinely helpful.')
+  .then(function(text){
+    const colleges=parseJSON(text);
+    results.innerHTML='<div class="results-header">'+colleges.length+' recommendation'+(colleges.length!==1?'s':'')+'</div>';
+    colleges.forEach(function(c){
+      if (!c||!c.name) return;
+      const tc=c.type==='Reach'?'tag-reach':c.type==='Safety'?'tag-safety':'tag-match';
+      const el=document.createElement('div'); el.className='college-card';
+      el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:11px;"><div><div class="college-name">'+c.name+'</div><div class="college-location">📍 '+(c.location||'')+'</div></div><span class="tag '+tc+'">'+(c.type||'Match')+'</span></div><div class="college-why">'+(c.why||'')+'</div><div class="section-title">Requirements</div><div>'+((c.requirements||[])).map(function(r){ return '<div class="req-item">'+r+'</div>'; }).join('')+'</div><div class="college-tip"><strong>💡 Tip:</strong> '+(c.tip||'')+'</div>';
+      results.appendChild(el);
+    });
+  })
+  .catch(function(e){ results.innerHTML=errorHTML(e.message||'Something went wrong.','generateCollege'); })
+  .finally(function(){ btn.disabled=false; btn.innerHTML='✨ Find Colleges'; });
+}
+document.getElementById('college-btn').addEventListener('click', generateCollege);
+
+// ═══ PROJECTS ═══
+function generateProjects() {
+  const query=document.getElementById('project-prompt').value.trim();
+  if (!query) { alert('Please enter a STEM topic!'); return; }
+  const t=getFilter('projt'), d=getFilter('projd');
+  const btn=document.getElementById('project-btn'), results=document.getElementById('project-results');
+  btn.disabled=true; btn.textContent='⏳ Generating...';
+  results.innerHTML=loadingHTML('Generating project ideas...');
+  callGroq('You are an enthusiastic STEM teacher for teens. Topic: "'+query+'". Time: '+t+', Level: '+d+'. Generate exactly 3 exciting STEM projects. Return ONLY a valid JSON array:\n[{"name":"","time":"1 week","difficulty":"Beginner","description":"2-3 sentences about what you build and learn","materials":["specific material with quantity"],"steps":["Detailed step"]}]\n4-6 materials with quantities. 4-6 steps each. Each step = full detailed sentence. Steps must be precise and instructional — no fluff or filler phrases.')
+  .then(function(text){
+    const projects=parseJSON(text);
+    results.innerHTML='<div class="results-header">'+projects.length+' project idea'+(projects.length!==1?'s':'')+'</div>';
+    projects.forEach(function(p){
+      if (!p||!p.name) return;
+      const dc=p.difficulty==='Beginner'?'tag-easy':p.difficulty==='Intermediate'?'tag-medium':'tag-hard';
+      const isSaved=savedProjects.some(function(sp){ return sp.name===p.name; });
+      const el=document.createElement('div'); el.className='project-card';
+      el.innerHTML='<div class="recipe-tags"><span class="tag tag-time">⏱ '+p.time+'</span><span class="tag '+dc+'">⚡ '+p.difficulty+'</span></div><div class="project-name">'+p.name+'</div><div class="project-desc">'+(p.description||'')+'</div><div class="section-title">Materials Needed</div><div class="materials-list">'+((p.materials||[])).map(function(m){ return '<span class="material-tag">'+m+'</span>'; }).join('')+'</div><div class="section-title">Steps</div><ol class="steps-list">'+((p.steps||[])).map(function(s){ return '<li>'+s+'</li>'; }).join('')+'</ol><button class="save-proj-btn'+(isSaved?' saved':'')+'">'+( isSaved?'⭐ Saved':'☆ Save project')+'</button>';
+      el.querySelector('.save-proj-btn').addEventListener('click', function(){
+        const idx=savedProjects.findIndex(function(sp){ return sp.name===p.name; });
+        if (idx>=0){ savedProjects.splice(idx,1); this.textContent='☆ Save project'; this.classList.remove('saved'); }
+        else { savedProjects.push(p); this.textContent='⭐ Saved'; this.classList.add('saved'); }
+        safeSet('tk_saved_projects',savedProjects);
+      });
+      results.appendChild(el);
+    });
+  })
+  .catch(function(e){ results.innerHTML=errorHTML(e.message||'Something went wrong.','generateProjects'); })
+  .finally(function(){ btn.disabled=false; btn.innerHTML='✨ Generate Projects'; });
+}
+document.getElementById('project-btn').addEventListener('click', generateProjects);
+
+function renderSavedProjects() {
+  const el=document.getElementById('saved-proj-list');
+  if (!savedProjects.length) { el.innerHTML='<div class="empty-favs"><div class="icon">⭐</div><h3>No saved projects yet</h3><p>Generate projects and tap ☆ Save to keep them here.</p></div>'; return; }
+  el.innerHTML='<div class="results-header">'+savedProjects.length+' saved project'+(savedProjects.length!==1?'s':'')+'</div>';
+  savedProjects.forEach(function(p){
+    const dc=p.difficulty==='Beginner'?'tag-easy':p.difficulty==='Intermediate'?'tag-medium':'tag-hard';
+    const card=document.createElement('div'); card.className='project-card';
+    card.innerHTML='<div class="recipe-tags"><span class="tag tag-time">⏱ '+p.time+'</span><span class="tag '+dc+'">⚡ '+p.difficulty+'</span></div><div class="project-name">'+p.name+'</div><div class="project-desc">'+(p.description||'')+'</div><div class="section-title">Materials Needed</div><div class="materials-list">'+((p.materials||[])).map(function(m){ return '<span class="material-tag">'+m+'</span>'; }).join('')+'</div><div class="section-title">Steps</div><ol class="steps-list">'+((p.steps||[])).map(function(s){ return '<li>'+s+'</li>'; }).join('')+'</ol><button class="save-proj-btn saved" style="background:rgba(247,106,138,.1);border-color:var(--accent3);color:var(--accent3);">✕ Remove</button>';
+    card.querySelector('.save-proj-btn').addEventListener('click', function(){
+      savedProjects=savedProjects.filter(function(sp){ return sp.name!==p.name; });
+      safeSet('tk_saved_projects',savedProjects);
+      renderSavedProjects();
+    });
+    el.appendChild(card);
+  });
+}
+
+// ═══ GLOBAL ERROR HANDLER ═══
+window.addEventListener('error', function(e) {
+  console.error('Teen Kit error:', e.message);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('Teen Kit async error:', e.reason);
+  e.preventDefault();
+});
+
+// ═══ INIT ═══
+renderFormulas();
+renderTransactions();
+updateMoneyStats();
+if (goalData) renderGoal();
+</script>
+</body>
+</html>

@@ -303,6 +303,9 @@
     <button class="section-tab" data-sub="meal-favs" data-parent="meal">❤️ Favourites</button>
   </div>
   <div id="meal-gen" class="sub-page active">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button id="clear-meals-btn" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.78rem;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;">🗑 Clear</button>
+    </div>
     <div class="card">
       <label class="card-label">What do you want to make?</label>
       <textarea id="meal-prompt" placeholder="e.g. something cheesy and quick, pasta, tacos, healthy breakfast..."></textarea>
@@ -354,6 +357,9 @@
     <button class="section-tab" data-sub="snack-favs" data-parent="snack">❤️ Favourites</button>
   </div>
   <div id="snack-gen" class="sub-page active">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button id="clear-snacks-btn" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.78rem;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;">🗑 Clear</button>
+    </div>
     <div class="card">
       <label class="card-label">What's in your fridge / pantry?</label>
       <textarea id="snack-prompt" placeholder="e.g. eggs, cheese, bread, peanut butter..."></textarea>
@@ -416,7 +422,10 @@
 
 <!-- MONEY -->
 <div id="page-money" class="page">
-  <div class="page-title">💰 Money Tracker</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+    <div class="page-title" style="margin-bottom:0;">💰 Money Tracker</div>
+    <button id="clear-money-btn" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.78rem;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;">🗑 Clear</button>
+  </div>
   <div class="page-subtitle">Track income, spending, and savings goals.</div>
   <div class="money-stats">
     <div class="stat-card"><div class="stat-label">Balance</div><div class="stat-value pos" id="stat-balance">$0.00</div></div>
@@ -501,6 +510,9 @@
     <div id="formula-list"></div>
   </div>
   <div id="stem-college" class="stem-page">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button id="clear-college-btn" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.78rem;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;">🗑 Clear</button>
+    </div>
     <div class="card">
       <label class="card-label">What do you want to study?</label>
       <textarea id="college-prompt" placeholder="e.g. computer science, marine biology, architecture, medicine..."></textarea>
@@ -518,6 +530,9 @@
     <div id="college-results"></div>
   </div>
   <div id="stem-projects" class="stem-page">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button id="clear-projects-btn" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.78rem;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;">🗑 Clear</button>
+    </div>
     <div class="card">
       <label class="card-label">What STEM topic interests you?</label>
       <textarea id="project-prompt" placeholder="e.g. robotics, coding, chemistry experiments, environmental science..."></textarea>
@@ -1190,6 +1205,59 @@ function renderSavedProjects() {
     el.appendChild(card);
   });
 }
+
+// ═══ CLEAR BUTTONS ═══
+document.getElementById('clear-meals-btn').addEventListener('click', function() {
+  document.getElementById('meal-prompt').value = '';
+  document.getElementById('meal-results').innerHTML = '';
+  mealServings = 2;
+  document.getElementById('meal-serv-count').textContent = '2';
+  document.querySelectorAll('[data-group="mt"],[data-group="md"],[data-group="mdiet"]').forEach(function(c){
+    c.classList.toggle('active', c.dataset.val==='any'||c.dataset.val==='any diet');
+  });
+});
+
+document.getElementById('clear-snacks-btn').addEventListener('click', function() {
+  document.getElementById('snack-prompt').value = '';
+  document.getElementById('snack-results').innerHTML = '';
+  snackServings = 1;
+  document.getElementById('snack-serv-count').textContent = '1';
+  document.querySelectorAll('.ingredient-chip').forEach(function(c){ c.classList.remove('active'); });
+  document.querySelectorAll('[data-group="st"],[data-group="sd"],[data-group="sdiet"]').forEach(function(c){
+    c.classList.toggle('active', c.dataset.val==='any'||c.dataset.val==='any diet');
+  });
+});
+
+document.getElementById('clear-money-btn').addEventListener('click', function() {
+  if (!confirm('Clear ALL transactions and your savings goal? This cannot be undone.')) return;
+  transactions = [];
+  goalData = null;
+  safeSet('tk_transactions', []);
+  safeSet('tk_goal', null);
+  document.getElementById('goal-name').value = '';
+  document.getElementById('goal-target').value = '';
+  document.getElementById('goal-display').style.display = 'none';
+  document.getElementById('txn-desc').value = '';
+  document.getElementById('txn-amount').value = '';
+  renderTransactions();
+  updateMoneyStats();
+});
+
+document.getElementById('clear-college-btn').addEventListener('click', function() {
+  document.getElementById('college-prompt').value = '';
+  document.getElementById('college-results').innerHTML = '';
+  document.querySelectorAll('[data-group="gpa"]').forEach(function(c){
+    c.classList.toggle('active', c.dataset.val==='any GPA');
+  });
+});
+
+document.getElementById('clear-projects-btn').addEventListener('click', function() {
+  document.getElementById('project-prompt').value = '';
+  document.getElementById('project-results').innerHTML = '';
+  document.querySelectorAll('[data-group="projt"],[data-group="projd"]').forEach(function(c){
+    c.classList.toggle('active', c.dataset.val==='any time frame'||c.dataset.val==='any level');
+  });
+});
 
 // ═══ GLOBAL ERROR HANDLER ═══
 window.addEventListener('error', function(e) {
